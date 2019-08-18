@@ -129,9 +129,9 @@ namespace fasttext
 
         static void test(string [] args)
         {
-            var perLabel = args[1] == "test-label";
+            var perLabel = args[0] == "test-label";
 
-            if (args.Length < 4 || args.Length > 6)
+            if (args.Length < 3 || args.Length > 5)
             {
                 if (perLabel)
                 {
@@ -145,10 +145,10 @@ namespace fasttext
                 Environment.Exit(-1);
             }
 
-            var model = args[2];
-            var input = args[3];
-            int k = args.Length > 4 ? int.Parse(args[4]) : 1;
-            var threshold = args.Length > 5 ? float.Parse(args[5]) : 0f;
+            var model = args[1];
+            var input = args[2];
+            int k = args.Length > 3 ? int.Parse(args[3]) : 1;
+            var threshold = args.Length > 4 ? float.Parse(args[4]) : 0f;
 
             var fasttext = new FastText();
             fasttext.loadModel(model);
@@ -235,7 +235,7 @@ namespace fasttext
 
         static void predict(string[] args)
         {
-            if (args.Length < 4 || args.Length > 6)
+            if (args.Length < 3 || args.Length > 5)
             {
                 printPredictUsage();
                 Environment.Exit(-1);
@@ -244,22 +244,22 @@ namespace fasttext
             var k = 1;
             var threshold = 0f;
 
-            if (args.Length > 4)
+            if (args.Length > 3)
             {
-                k = int.Parse(args[4]);
-                if (args.Length == 6)
+                k = int.Parse(args[3]);
+                if (args.Length == 5)
                 {
-                    threshold = float.Parse(args[5]);
+                    threshold = float.Parse(args[4]);
                 }
             }
 
-            var printProb = args[1] == "predict-prob";
+            var printProb = args[0] == "predict-prob";
             var fasttext = new FastText();
-            fasttext.loadModel(args[2]);
+            fasttext.loadModel(args[1]);
 
             Stream ifs;
 
-            var infile = args[3];
+            var infile = args[2];
             var inputIsStdIn = infile == "-";
 
             if (!inputIsStdIn)
@@ -290,14 +290,14 @@ namespace fasttext
 
         static void printWordVectors(string[] args)
         {
-            if (args.Length != 3)
+            if (args.Length != 2)
             {
                 printPrintWordVectorsUsage();
                 Environment.Exit(-1);
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[2]);
+            fasttext.loadModel(args[1]);
 
             var vec = new Vector(fasttext.getDimension());
 
@@ -312,14 +312,14 @@ namespace fasttext
 
         static void printSentenceVectors(string[] args)
         {
-            if (args.Length != 3)
+            if (args.Length != 2)
             {
                 printPrintSentenceVectorsUsage();
                 Environment.Exit(-1);
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[2]);
+            fasttext.loadModel(args[1]);
 
             var svec = new Vector(fasttext.getDimension());
 
@@ -333,16 +333,16 @@ namespace fasttext
 
         static void printNgrams(string[] args)
         {
-            if (args.Length != 4)
+            if (args.Length != 3)
             {
                 printPrintNgramsUsage();
                 Environment.Exit(-1);
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[2]);
+            fasttext.loadModel(args[1]);
 
-            var word = args[3];
+            var word = args[2];
             var ngramVectors = fasttext.getNgramVectors(word);
 
             foreach (var ngramVector in ngramVectors)
@@ -355,13 +355,13 @@ namespace fasttext
         {
             var k = 0;
 
-            if (args.Length == 3)
+            if (args.Length == 2)
             {
                 k = 10;
             }
-            else if (args.Length == 4)
+            else if (args.Length == 3)
             {
-                k = int.Parse(args[3]);
+                k = int.Parse(args[2]);
             }
             else
             {
@@ -370,7 +370,7 @@ namespace fasttext
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[2]);
+            fasttext.loadModel(args[1]);
 
             const string prompt = "Query word? ";
             Console.Write(prompt);
@@ -386,13 +386,13 @@ namespace fasttext
         static void analogies(string[] args)
         {
             int k = 0;
-            if (args.Length  == 3)
+            if (args.Length == 2)
             {
                 k = 10;
             }
-            else if (args.Length == 4)
+            else if (args.Length == 3)
             {
-                k = int.Parse(args[3]);
+                k = int.Parse(args[2]);
             }
             else
             {
@@ -406,7 +406,7 @@ namespace fasttext
             }
 
             var fasttext = new FastText();
-            var model = args[2];
+            var model = args[1];
             Console.WriteLine($"Loading model {model}");
             fasttext.loadModel(model);
 
@@ -455,14 +455,14 @@ namespace fasttext
 
         static void dump(string[] args)
         {
-            if (args.Length < 4)
+            if (args.Length < 3)
             {
                 printDumpUsage();
                 Environment.Exit(-1);
             }
 
-            var modelPath = args[2];
-            var option = args[3];
+            var modelPath = args[1];
+            var option = args[2];
 
             var fasttext = new FastText();
             fasttext.loadModel(modelPath);
@@ -506,13 +506,13 @@ namespace fasttext
 
         static int Main(string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length < 1)
             {
                 printUsage();
                 return -1;
             }
 
-            var command = args[1];
+            var command = args[0];
             if (command == "skipgram" || command == "cbow" || command == "supervised")
             {
                 train(args);

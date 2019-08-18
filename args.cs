@@ -85,7 +85,7 @@ namespace fasttext
 
         public void parseArgs(IReadOnlyList<string> args)
         {
-            var command = args[1];
+            var command = args[0];
 
             if (command == "supervised")
             {
@@ -101,7 +101,7 @@ namespace fasttext
                 model = model_name.cbow;
             }
 
-            for (int ai = 2; ai < args.Count; ai += 2)
+            for (int ai = 1; ai < args.Count; ai += 2)
             {
                 if (args[ai][0] != '-')
                 {

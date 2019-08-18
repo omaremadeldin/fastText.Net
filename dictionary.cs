@@ -10,7 +10,7 @@ namespace fasttext
     {
         public enum entry_type : byte { word = 0, label = 1 };
 
-        public struct entry
+        public class entry
         {
             public string word;
             public long count;
@@ -25,7 +25,7 @@ namespace fasttext
         protected int[] word2int_;
         protected List<entry> words_;
 
-        protected List<float> pdiscard_;
+        protected float[] pdiscard_;
         protected int size_;
         protected int nwords_;
         protected int nlabels_;
@@ -54,6 +54,9 @@ namespace fasttext
             nlabels_ = 0;
             ntokens_ = 0;
             pruneidx_size_ = -1;
+
+            words_ = new List<entry>();
+            pruneidx_ = new Dictionary<int, int>();
         }
 
         public Dictionary(Args args, BinaryReader reader)
@@ -64,10 +67,10 @@ namespace fasttext
 
         protected int find(string w)
         {
-            return find(w, (int)hash(w));
+            return find(w, hash(w));
         }
 
-        protected int find(string w, int h)
+        protected int find(string w, uint h)
         {
             var word2intsize = word2int_.Length;
             var id = h % word2intsize;
@@ -77,7 +80,7 @@ namespace fasttext
                 id = (id + 1) % word2intsize;
             }
 
-            return id;
+            return (int)id;
         }
 
         public void add(string w)
@@ -157,7 +160,7 @@ namespace fasttext
             return rand > pdiscard_[id];
         }
 
-        public int getId(string w, int h)
+        public int getId(string w, uint h)
         {
             var id = find(w, h);
             return word2int_[id];
@@ -240,8 +243,7 @@ namespace fasttext
             for (int i = 0; i < size_; i++)
             {
                 var word = BOW + words_[i].word + EOW;
-                words_[i].subwords.Clear();
-                words_[i].subwords.Add(i);
+                words_[i].subwords = new List<int> { i };
 
                 if (words_[i].word != EOS)
                 {
@@ -252,8 +254,6 @@ namespace fasttext
 
         public bool readWord(Stream stream, out string word)
         {
-            //int c;
-            //std::streambuf & sb = *in.rdbuf();
             word = string.Empty;
             while (stream.Position != stream.Length)
             {
@@ -274,15 +274,13 @@ namespace fasttext
                     {
                         if (c == '\n')
                         {
-                            stream.Seek(stream.Position - 1, SeekOrigin.Begin);
+                            stream.Position--;
                         }
                         return true;
                     }
                 }
                 word += c;
             }
-
-            // trigger eofbit
 
             return !string.IsNullOrEmpty(word);
         }
@@ -362,7 +360,8 @@ namespace fasttext
 
         protected void initTableDiscard()
         {
-            pdiscard_.Capacity = size_;
+            pdiscard_ = new float[size_];
+
             for (int i = 0; i < size_; i++)
             {
                  var f = words_[i].count / (float)(ntokens_);
@@ -476,7 +475,7 @@ namespace fasttext
             while (readWord(stream, out var token))
             {
                 var h = hash(token);
-                var wid = getId(token, (int)h);
+                var wid = getId(token, h);
                 var type = wid < 0 ? getType(token) : getType(wid);
 
                 ntokens++;
@@ -540,7 +539,6 @@ namespace fasttext
 
             for (int i = 0; i < size_; i++)
             {
-                //TODO: make sure you can read c++ fasttext output
                 entry e = words_[i];
                 var word_bytes = System.Text.Encoding.ASCII.GetBytes(e.word);
                 writer.Write(word_bytes);
@@ -568,11 +566,11 @@ namespace fasttext
             for (int i = 0; i < size_; i++)
             {
                 var e = new entry();
-                var c = reader.ReadChar();
+                var c = (char)reader.ReadByte();
                 while (c != '\0')
                 {
                     e.word += c;
-                    c = reader.ReadChar();
+                    c = (char)reader.ReadByte();
                 }
                 e.count = reader.ReadInt64();
                 e.type = (entry_type)reader.ReadByte();

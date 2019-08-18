@@ -118,14 +118,16 @@ namespace fasttext
             return argmax;
         }
 
-        /*
-         * std::ostream& operator<<(std::ostream& os, const Vector& v) {
-         * os << std::setprecision(5);
-         * for (int64_t j = 0; j < v.size(); j++) {
-         * os << v[j] << ' ';
-         * }
-         * return os;
-         * }
-         */
+        public override string ToString()
+        {
+            var result = string.Empty;
+
+            for (long j = 0; j < data_.Length; j++)
+            {
+                result += $"{data_[j]:0.#####} ";
+            }
+
+            return result;
+        }
     }
 }
