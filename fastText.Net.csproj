@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Exe</OutputType>
+    <StartupObject>fasttext.Program</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="cpp_src\**" />
+    <Compile Remove="fastText-0.9.1\**" />
+    <EmbeddedResource Remove="cpp_src\**" />
+    <EmbeddedResource Remove="fastText-0.9.1\**" />
+    <None Remove="cpp_src\**" />
+    <None Remove="fastText-0.9.1\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Huitian.PowerCollections" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>
