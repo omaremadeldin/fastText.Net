@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace fasttext
+namespace FastText
 {
     internal class Program
     {
-        static void printUsage()
+        static void PrintUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext <command> <args>\n\n" +
@@ -27,12 +27,12 @@ namespace fasttext
                 "  dump                    dump arguments,dictionary,input/output vectors\n");
         }
 
-        static void printQuantizeUsage()
+        static void PrintQuantizeUsage()
         {
             Console.Error.WriteLine("usage: fasttext quantize <args>");
         }
 
-        static void printTestUsage()
+        static void PrintTestUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext test <model> <test-data> [<k>] [<th>]\n\n" +
@@ -42,7 +42,7 @@ namespace fasttext
                 "  <th>         (optional; 0.0 by default) probability threshold\n");
         }
 
-        static void printPredictUsage()
+        static void PrintPredictUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext predict[-prob] <model> <test-data> [<k>] [<th>]\n\n" +
@@ -52,7 +52,7 @@ namespace fasttext
                 "  <th>         (optional; 0.0 by default) probability threshold\n");
         }
 
-        static void printTestLabelUsage()
+        static void PrintTestLabelUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext test-label <model> <test-data> [<k>] [<th>]\n\n" +
@@ -62,21 +62,21 @@ namespace fasttext
                 "  <th>         (optional; 0.0 by default) probability threshold\n");
         }
 
-        static void printPrintWordVectorsUsage()
+        static void PrintPrintWordVectorsUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext print-word-vectors <model>\n\n" +
                 "  <model>      model filename\n");
         }
 
-        static void printPrintSentenceVectorsUsage()
+        static void PrintPrintSentenceVectorsUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext print-sentence-vectors <model>\n\n" +
                 "  <model>      model filename\n");
         }
 
-        static void printPrintNgramsUsage()
+        static void PrintPrintNgramsUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext print-ngrams <model> <word>\n\n" +
@@ -84,7 +84,7 @@ namespace fasttext
                 "  <word>       word to print\n");
         }
 
-        static void printNNUsage()
+        static void PrintNNUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext nn <model> <k>\n\n" +
@@ -92,7 +92,7 @@ namespace fasttext
                 "  <k>          (optional; 10 by default) predict top k labels\n");
         }
 
-        static void printAnalogiesUsage()
+        static void PrintAnalogiesUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext analogies <model> <k>\n\n" +
@@ -100,7 +100,7 @@ namespace fasttext
                 "  <k>          (optional; 10 by default) predict top k labels\n");
         }
 
-        static void printDumpUsage()
+        static void PrintDumpUsage()
         {
             Console.Error.WriteLine(
                 "usage: fasttext dump <model> <option>\n\n" +
@@ -108,26 +108,26 @@ namespace fasttext
                 "  <option>     option from args,dict,input,output");
         }
 
-        static void quantize(string[] args)
+        static void Quantize(string[] args)
         {
             var a = new Args();
 
             if (args.Length < 3)
             {
-                printQuantizeUsage();
-                a.printHelp();
+                PrintQuantizeUsage();
+                a.PrintHelp();
                 Environment.Exit(-1);
             }
 
-            a.parseArgs(args);
+            a.ParseArgs(args);
             var fasttext = new FastText();
             // parseArgs checks if a->output is given.
-            fasttext.loadModel(a.output + ".bin");
-            fasttext.quantize(a);
-            fasttext.saveModel(a.output + ".ftz");
+            fasttext.LoadModel(a.output + ".bin");
+            fasttext.Quantize(a);
+            fasttext.SaveModel(a.output + ".ftz");
         }
 
-        static void test(string [] args)
+        static void Test(string [] args)
         {
             var perLabel = args[0] == "test-label";
 
@@ -135,11 +135,11 @@ namespace fasttext
             {
                 if (perLabel)
                 {
-                    printTestLabelUsage();
+                    PrintTestLabelUsage();
                 }
                 else
                 {
-                    printTestUsage();
+                    PrintTestUsage();
                 }
 
                 Environment.Exit(-1);
@@ -151,13 +151,13 @@ namespace fasttext
             var threshold = args.Length > 4 ? float.Parse(args[4]) : 0f;
 
             var fasttext = new FastText();
-            fasttext.loadModel(model);
+            fasttext.LoadModel(model);
 
             var meter = new Meter();
 
             if (input == "-")
             {
-                fasttext.test(Console.OpenStandardInput(), k, threshold, meter);
+                fasttext.Test(Console.OpenStandardInput(), k, threshold, meter);
             }
             else
             {
@@ -169,7 +169,7 @@ namespace fasttext
                     Environment.Exit(-1);
                 }
 
-                fasttext.test(ifs, k, threshold, meter);
+                fasttext.Test(ifs, k, threshold, meter);
             }
 
             if (perLabel)
@@ -188,19 +188,19 @@ namespace fasttext
                     Console.Write("  ");
                 };
 
-                var dict = fasttext.getDictionary();
+                var dict = fasttext.GetDictionary();
                 for (int labelId = 0; labelId < dict.nlabels; labelId++)
                 {
-                    writeMetric("F1-Score", meter.f1Score(labelId));
-                    writeMetric("Precision", meter.precision(labelId));
-                    writeMetric("Recall", meter.recall(labelId));
-                    Console.WriteLine($" {dict.getLabel(labelId)}");
+                    writeMetric("F1-Score", meter.F1Score(labelId));
+                    writeMetric("Precision", meter.Precision(labelId));
+                    writeMetric("Recall", meter.Recall(labelId));
+                    Console.WriteLine($" {dict.GetLabel(labelId)}");
                 }
             }
-            meter.writeGeneralMetrics(Console.Out, k);
+            meter.WriteGeneralMetrics(Console.Out, k);
         }
 
-        static void printPredictions(
+        static void PrintPredictions(
             List<Tuple<float, string>> predictions,
             bool printProb,
             bool multiline)
@@ -233,11 +233,11 @@ namespace fasttext
             }
         }
 
-        static void predict(string[] args)
+        static void Predict(string[] args)
         {
             if (args.Length < 3 || args.Length > 5)
             {
-                printPredictUsage();
+                PrintPredictUsage();
                 Environment.Exit(-1);
             }
 
@@ -255,7 +255,7 @@ namespace fasttext
 
             var printProb = args[0] == "predict-prob";
             var fasttext = new FastText();
-            fasttext.loadModel(args[1]);
+            fasttext.LoadModel(args[1]);
 
             Stream ifs;
 
@@ -280,70 +280,70 @@ namespace fasttext
 
             var predictions = new List<Tuple<float, string>>();
 
-            while (fasttext.predictLine(ifs, predictions, k, threshold))
+            while (fasttext.PredictLine(ifs, predictions, k, threshold))
             {
-                printPredictions(predictions, printProb, false);
+                PrintPredictions(predictions, printProb, false);
             }
 
             ifs.Close();
         }
 
-        static void printWordVectors(string[] args)
+        static void PrintWordVectors(string[] args)
         {
             if (args.Length != 2)
             {
-                printPrintWordVectorsUsage();
+                PrintPrintWordVectorsUsage();
                 Environment.Exit(-1);
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[1]);
+            fasttext.LoadModel(args[1]);
 
-            var vec = new Vector(fasttext.getDimension());
+            var vec = new Vector(fasttext.GetDimension());
 
             while (Console.In.Peek() != -1)
             {
                 var word = Console.ReadLine();
 
-                fasttext.getWordVector(vec, word);
+                fasttext.GetWordVector(vec, word);
                 Console.WriteLine($"{word} {vec}");
             }
         }
 
-        static void printSentenceVectors(string[] args)
+        static void PrintSentenceVectors(string[] args)
         {
             if (args.Length != 2)
             {
-                printPrintSentenceVectorsUsage();
+                PrintPrintSentenceVectorsUsage();
                 Environment.Exit(-1);
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[1]);
+            fasttext.LoadModel(args[1]);
 
-            var svec = new Vector(fasttext.getDimension());
+            var svec = new Vector(fasttext.GetDimension());
 
             while (Console.In.Peek() != -1)
             {
-                fasttext.getSentenceVector(Console.OpenStandardInput(), svec);
+                fasttext.GetSentenceVector(Console.OpenStandardInput(), svec);
                 // Don't print sentence
                 Console.WriteLine(svec);
             }
         }
 
-        static void printNgrams(string[] args)
+        static void PrintNgrams(string[] args)
         {
             if (args.Length != 3)
             {
-                printPrintNgramsUsage();
+                PrintPrintNgramsUsage();
                 Environment.Exit(-1);
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[1]);
+            fasttext.LoadModel(args[1]);
 
             var word = args[2];
-            var ngramVectors = fasttext.getNgramVectors(word);
+            var ngramVectors = fasttext.GetNgramVectors(word);
 
             foreach (var ngramVector in ngramVectors)
             {
@@ -351,7 +351,7 @@ namespace fasttext
             }
         }
 
-        static void nn(string[] args)
+        static void NN(string[] args)
         {
             var k = 0;
 
@@ -365,12 +365,12 @@ namespace fasttext
             }
             else
             {
-                printNNUsage();
+                PrintNNUsage();
                 Environment.Exit(-1);
             }
 
             var fasttext = new FastText();
-            fasttext.loadModel(args[1]);
+            fasttext.LoadModel(args[1]);
 
             const string prompt = "Query word? ";
             Console.Write(prompt);
@@ -378,12 +378,12 @@ namespace fasttext
             while (Console.In.Peek() != -1)
             {
                 var queryWord = Console.ReadLine();
-                printPredictions(fasttext.getNN(queryWord, k), true, true);
+                PrintPredictions(fasttext.GetNN(queryWord, k), true, true);
                 Console.Write(prompt);
             }
         }
 
-        static void analogies(string[] args)
+        static void Analogies(string[] args)
         {
             int k = 0;
             if (args.Length == 2)
@@ -396,7 +396,7 @@ namespace fasttext
             }
             else
             {
-                printAnalogiesUsage();
+                PrintAnalogiesUsage();
                 Environment.Exit(-1);
             }
 
@@ -408,7 +408,7 @@ namespace fasttext
             var fasttext = new FastText();
             var model = args[1];
             Console.WriteLine($"Loading model {model}");
-            fasttext.loadModel(model);
+            fasttext.LoadModel(model);
 
             const string prompt = "Query triplet (A - B + C)? ";
             string wordA, wordB, wordC;
@@ -422,7 +422,7 @@ namespace fasttext
                 wordB = words[1];
                 wordC = words[2];
 
-                printPredictions(fasttext.getAnalogies(k, wordA, wordB, wordC), true, true);
+                PrintPredictions(fasttext.GetAnalogies(k, wordA, wordB, wordC), true, true);
 
                 Console.Write(prompt);
             }
@@ -431,7 +431,7 @@ namespace fasttext
         static void train(string[] args)
         {
             var a = new Args();
-            a.parseArgs(args);
+            a.ParseArgs(args);
 
             var fasttext = new FastText();
             var outputFileName = a.output +".bin";
@@ -443,21 +443,21 @@ namespace fasttext
             }
             ofs.Close();
 
-            fasttext.train(a);
-            fasttext.saveModel(outputFileName);
-            fasttext.saveVectors(a.output + ".vec");
+            fasttext.Train(a);
+            fasttext.SaveModel(outputFileName);
+            fasttext.SaveVectors(a.output + ".vec");
 
             if (a.saveOutput)
             {
-                fasttext.saveOutput(a.output + ".output");
+                fasttext.SaveOutput(a.output + ".output");
             }
         }
 
-        static void dump(string[] args)
+        static void Dump(string[] args)
         {
             if (args.Length < 3)
             {
-                printDumpUsage();
+                PrintDumpUsage();
                 Environment.Exit(-1);
             }
 
@@ -465,41 +465,41 @@ namespace fasttext
             var option = args[2];
 
             var fasttext = new FastText();
-            fasttext.loadModel(modelPath);
+            fasttext.LoadModel(modelPath);
 
             if (option == "args")
             {
-                fasttext.getArgs().dump(Console.Out);
+                fasttext.GetArgs().Dump(Console.Out);
             }
             else if (option == "dict")
             {
-                fasttext.getDictionary().dump(Console.Out);
+                fasttext.GetDictionary().Dump(Console.Out);
             }
             else if (option == "input")
             {
-                if (fasttext.isQuant())
+                if (fasttext.IsQuant())
                 {
                     Console.Error.WriteLine("Not supported for quantized models.");
                 }
                 else
                 {
-                    fasttext.getInputMatrix().dump(Console.Out);
+                    fasttext.GetInputMatrix().Dump(Console.Out);
                 }
             }
             else if (option == "output")
             {
-                if (fasttext.isQuant())
+                if (fasttext.IsQuant())
                 {
                     Console.Error.WriteLine("Not supported for quantized models.");
                 }
                 else
                 {
-                    fasttext.getOutputMatrix().dump(Console.Out);
+                    fasttext.GetOutputMatrix().Dump(Console.Out);
                 }
             }
             else
             {
-                printDumpUsage();
+                PrintDumpUsage();
                 Environment.Exit(-1);
             }
         }
@@ -508,7 +508,7 @@ namespace fasttext
         {
             if (args.Length < 1)
             {
-                printUsage();
+                PrintUsage();
                 return -1;
             }
 
@@ -519,43 +519,43 @@ namespace fasttext
             }
             else if (command == "test" || command == "test-label")
             {
-                test(args);
+                Test(args);
             }
             else if (command == "quantize")
             {
-                quantize(args);
+                Quantize(args);
             }
             else if (command == "print-word-vectors")
             {
-                printWordVectors(args);
+                PrintWordVectors(args);
             }
             else if (command == "print-sentence-vectors")
             {
-                printSentenceVectors(args);
+                PrintSentenceVectors(args);
             }
             else if (command == "print-ngrams")
             {
-                printNgrams(args);
+                PrintNgrams(args);
             }
             else if (command == "nn")
             {
-                nn(args);
+                NN(args);
             }
             else if (command == "analogies")
             {
-                analogies(args);
+                Analogies(args);
             }
             else if (command == "predict" || command == "predict-prob")
             {
-                predict(args);
+                Predict(args);
             }
             else if (command == "dump")
             {
-                dump(args);
+                Dump(args);
             }
             else
             {
-                printUsage();
+                PrintUsage();
                 return -1;
             }
 

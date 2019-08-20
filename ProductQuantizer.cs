@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace fasttext
+namespace FastText
 {
     public class ProductQuantizer
     {
@@ -72,7 +72,7 @@ namespace fasttext
             }
         }
 
-        public float[] get_centroids(int m, byte i)
+        public float[] GetCentroids(int m, byte i)
         {
             int index;
 
@@ -88,15 +88,15 @@ namespace fasttext
             return SliceArray(centroids_, index);
         }
 
-        public float assign_centroid(float[] x, float[] c0, byte[] code, int d)
+        public float AssignCentroid(float[] x, float[] c0, byte[] code, int d)
         {
             var c = c0;
-            var dis = distL2(x, c, d);
+            var dis = DistL2(x, c, d);
             code[0] = 0;
             for (int j = 1; j < ksub_; j++)
             {
                 c = c.Skip(d).ToArray();
-                var disij = distL2(x, c, d);
+                var disij = DistL2(x, c, d);
                 if (disij < dis)
                 {
                     code[0] = (byte)j;
@@ -110,11 +110,11 @@ namespace fasttext
         {
             for (int i = 0; i < n; i++)
             {
-                assign_centroid(SliceArray(x, i * d), centroids, SliceArray(codes, i), d);
+                AssignCentroid(SliceArray(x, i * d), centroids, SliceArray(codes, i), d);
             }
         }
 
-        public void MStep(float[] x0, float[] centroids, byte[] codes, int d, int n)
+        public void Mstep(float[] x0, float[] centroids, byte[] codes, int d, int n)
         {
             var nelts = Enumerable.Repeat(0, ksub_).ToArray();
             Array.Clear(centroids, 0, d * ksub_);
@@ -175,7 +175,7 @@ namespace fasttext
             }
         }
 
-        public void kmeans(float[] x, float[] c, int n, int d)
+        public void Kmeans(float[] x, float[] c, int n, int d)
         {
             var perm = new int[n];
 
@@ -200,11 +200,11 @@ namespace fasttext
             for (int i = 0; i < niter_; i++)
             {
                 Estep(x, c, codes, d, n);
-                MStep(x, c, codes, d, n);
+                Mstep(x, c, codes, d, n);
             }
         }
 
-        public void train(int n, float[] x)
+        public void Train(int n, float[] x)
         {
             if (n < ksub_)
             {
@@ -240,11 +240,11 @@ namespace fasttext
                         length: d);
                 }
 
-                kmeans(xslicearr, get_centroids(m, 0), np, d);
+                Kmeans(xslicearr, GetCentroids(m, 0), np, d);
             }
         }
 
-        public float mulcode(float[] x, byte[] codes, int t, float alpha)
+        public float MulCode(float[] x, byte[] codes, int t, float alpha)
         {
             float res = 0f;
             var d = dsub_;
@@ -252,7 +252,7 @@ namespace fasttext
 
             for (int m = 0; m < nsubq_; m++)
             {
-                var c = get_centroids(m, code[m]);
+                var c = GetCentroids(m, code[m]);
 
                 if (m == nsubq_ - 1)
                 {
@@ -268,14 +268,14 @@ namespace fasttext
             return res * alpha;
         }
 
-        public void addcode(float[] x, byte[] codes, int t, float alpha)
+        public void AddCode(float[] x, byte[] codes, int t, float alpha)
         {
             var d = dsub_;
             var code = SliceArray(codes, nsubq_ * t);
 
             for (int m = 0; m < nsubq_; m++)
             {
-                var c = get_centroids(m, code[m]);
+                var c = GetCentroids(m, code[m]);
 
                 if (m == nsubq_ - 1)
                 {
@@ -289,7 +289,7 @@ namespace fasttext
             }
         }
 
-        public void compute_code(float[] x, byte[] code)
+        public void ComputeCode(float[] x, byte[] code)
         {
             var d = dsub_;
             for (int m = 0; m < nsubq_; m++)
@@ -299,19 +299,19 @@ namespace fasttext
                     d = lastdsub_;
                 }
 
-                assign_centroid(SliceArray(x, m * dsub_), get_centroids(m, 0), SliceArray(code, m), d);
+                AssignCentroid(SliceArray(x, m * dsub_), GetCentroids(m, 0), SliceArray(code, m), d);
             }
         }
 
-        public void compute_codes(float[] x, byte[] codes, int n)
+        public void ComputeCodes(float[] x, byte[] codes, int n)
         {
             for (int i = 0; i < n; i++)
             {
-                compute_code(SliceArray(x, i * dim_), SliceArray(codes, i * nsubq_));
+                ComputeCode(SliceArray(x, i * dim_), SliceArray(codes, i * nsubq_));
             }
         }
 
-        public void save(BinaryWriter writer)
+        public void Save(BinaryWriter writer)
         {
             writer.Write(dim_);
             writer.Write(nsubq_);
@@ -324,7 +324,7 @@ namespace fasttext
             }
         }
 
-        public void load(BinaryReader reader)
+        public void Load(BinaryReader reader)
         {
             dim_ = reader.ReadInt32();
             nsubq_ = reader.ReadInt32();
@@ -338,7 +338,7 @@ namespace fasttext
             }
         }
 
-        private float distL2(float[] x, float[] y, int d)
+        private float DistL2(float[] x, float[] y, int d)
         {
             var dist = 0f;
             for (int i = 0; i < d; i++)

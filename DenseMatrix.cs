@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace fasttext
+namespace FastText
 {
     public class DenseMatrix : Matrix
     {
@@ -29,12 +29,12 @@ namespace fasttext
             Array.Copy(other.data_, data_, other.data_.Length);
         }
 
-        public void zero()
+        public void Zero()
         {
             Array.Clear(data_, 0, data_.Length);
         }
 
-        public void uniform(float a)
+        public void Uniform(float a)
         {
             var rng = new Random(1);
 
@@ -44,7 +44,7 @@ namespace fasttext
             }
         }
 
-        public float at(long i, long j)
+        public float At(long i, long j)
         {
             Debug.Assert(i * n_ + j < data_.Length);
 
@@ -63,7 +63,7 @@ namespace fasttext
             }
         }
 
-        public void multiplyRow(float[] nums, long ib = 0, long ie = -1)
+        public void MultiplyRow(float[] nums, long ib = 0, long ie = -1)
         {
             if (ie == -1)
             {
@@ -85,7 +85,7 @@ namespace fasttext
             }
         }
 
-        public void divideRow(float[] denoms, long ib = 0, long ie = -1)
+        public void DivideRow(float[] denoms, long ib = 0, long ie = -1)
         {
             if (ie == -1)
             {
@@ -107,12 +107,12 @@ namespace fasttext
             }
         }
 
-        public float l2NormRow(long i)
+        public float L2NormRow(long i)
         {
             float norm = 0;
             for (var j = 0; j < n_; j++)
             {
-                norm += at(i, j) * at(i, j);
+                norm += At(i, j) * At(i, j);
             }
             if (float.IsNaN(norm))
             {
@@ -122,17 +122,17 @@ namespace fasttext
             return (float)Math.Sqrt(norm);
         }
 
-        public void l2NormRow(float[] norms)
+        public void L2NormRow(float[] norms)
         {
             Debug.Assert(norms.Length == m_);
 
             for (var i = 0; i < m_; i++)
             {
-                norms[i] = l2NormRow(i);
+                norms[i] = L2NormRow(i);
             }
         }
 
-        public override float dotRow(float[] vec, long i)
+        public override float DotRow(float[] vec, long i)
         {
             Debug.Assert(i >= 0);
             Debug.Assert(i < m_);
@@ -141,7 +141,7 @@ namespace fasttext
             float d = 0;
             for (long j = 0; j < n_; j++)
             {
-                d += at(i, j) * vec[j];
+                d += At(i, j) * vec[j];
             }
 
             if (float.IsNaN(d))
@@ -152,7 +152,7 @@ namespace fasttext
             return d;
         }
 
-        public override void addVectorToRow(float[] vec, long i, float a)
+        public override void AddVectorToRow(float[] vec, long i, float a)
         {
             Debug.Assert(i >= 0);
             Debug.Assert(i < m_);
@@ -164,31 +164,31 @@ namespace fasttext
             }
         }
 
-        public override void addRowToVector(float[] x, int i)
+        public override void AddRowToVector(float[] x, int i)
         {
             Debug.Assert(i >= 0);
-            Debug.Assert(i < size(0));
-            Debug.Assert(x.Length == size(1));
+            Debug.Assert(i < Size(0));
+            Debug.Assert(x.Length == Size(1));
 
             for (long j = 0; j < n_; j++)
             {
-                x[j] += at(i, j);
+                x[j] += At(i, j);
             }
         }
 
-        public override void addRowToVector(float[] x, int i, float a)
+        public override void AddRowToVector(float[] x, int i, float a)
         {
             Debug.Assert(i >= 0);
-            Debug.Assert(i < size(0));
-            Debug.Assert(x.Length == size(1));
+            Debug.Assert(i < Size(0));
+            Debug.Assert(x.Length == Size(1));
 
             for (long j = 0; j < n_; j++)
             {
-                x[j] += a * at(i, j);
+                x[j] += a * At(i, j);
             }
         }
 
-        public override void save(BinaryWriter writer)
+        public override void Save(BinaryWriter writer)
         {
             writer.Write(m_);
             writer.Write(n_);
@@ -199,7 +199,7 @@ namespace fasttext
             }
         }
 
-        public override void load(BinaryReader reader)
+        public override void Load(BinaryReader reader)
         {
             m_ = reader.ReadInt64();
             n_ = reader.ReadInt64();
@@ -211,7 +211,7 @@ namespace fasttext
             }
         }
 
-        public override void dump(TextWriter writer)
+        public override void Dump(TextWriter writer)
         {
             writer.WriteLine($"{m_} {n_}");
             for (int i = 0; i < m_; i++)
@@ -223,7 +223,7 @@ namespace fasttext
                         writer.Write(" ");
                     }
 
-                    writer.Write(at(i, j));
+                    writer.Write(At(i, j));
                 }
                 writer.Write(Environment.NewLine);
             }

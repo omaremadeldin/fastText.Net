@@ -1,8 +1,7 @@
-﻿
-using System.IO;
+﻿using System.IO;
 using Predictions = System.Collections.Generic.List<System.Tuple<float, int>>;
 
-namespace fasttext
+namespace FastText
 {
     public class Meter
     {
@@ -12,7 +11,7 @@ namespace fasttext
             public long predicted;
             public long predictedGold;
 
-            public double precision()
+            public double Precision()
             {
                 if (predicted == 0)
                 {
@@ -22,7 +21,7 @@ namespace fasttext
                 return predictedGold / (double)predicted;
             }
 
-            public double recall()
+            public double Recall()
             {
                 if (gold == 0)
                 {
@@ -32,7 +31,7 @@ namespace fasttext
                 return predictedGold / (double)gold;
             }
 
-            public double f1Score()
+            public double F1Score()
             {
                 if (predicted + gold == 0)
                 {
@@ -49,7 +48,7 @@ namespace fasttext
 
         public long nexamples => nexamples_;
 
-        public void log(int[] labels, Predictions predictions)
+        public void Log(int[] labels, Predictions predictions)
         {
             nexamples_++;
             metrics_.gold += labels.Length;
@@ -62,7 +61,7 @@ namespace fasttext
                 metrics.predicted++;
                 labelMetrics_[prediction.Item2] = metrics;
 
-                if (Utils.contains(labels, prediction.Item2))
+                if (Utils.Contains(labels, prediction.Item2))
                 {
                     metrics = labelMetrics_[prediction.Item2];
                     metrics.predictedGold++;
@@ -81,36 +80,36 @@ namespace fasttext
             }
         }
 
-        public double precision(int i)
+        public double Precision(int i)
         {
-            return labelMetrics_[i].precision();
+            return labelMetrics_[i].Precision();
         }
 
-        public double recall(int i)
+        public double Recall(int i)
         {
-            return labelMetrics_[i].recall();
+            return labelMetrics_[i].Recall();
         }
 
-        public double f1Score(int i)
+        public double F1Score(int i)
         {
-            return labelMetrics_[i].f1Score();
+            return labelMetrics_[i].F1Score();
         }
 
-        public double precision()
+        public double Precision()
         {
-            return metrics_.precision();
+            return metrics_.Precision();
         }
 
-        public double recall()
+        public double Recall()
         {
-            return metrics_.recall();
+            return metrics_.Recall();
         }
 
-        public void writeGeneralMetrics(TextWriter writer, int k)
+        public void WriteGeneralMetrics(TextWriter writer, int k)
         {
             writer.WriteLine($"N\t{nexamples_}");
-            writer.WriteLine($"P@{k}\t{metrics_.precision():0.###}");
-            writer.WriteLine($"R@{k}\t{metrics_.recall():0.###}");
+            writer.WriteLine($"P@{k}\t{metrics_.Precision():0.###}");
+            writer.WriteLine($"R@{k}\t{metrics_.Recall():0.###}");
         }
     }
 }

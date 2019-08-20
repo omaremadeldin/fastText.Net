@@ -1,7 +1,7 @@
 ﻿using System;
 using Predictions = System.Collections.Generic.List<System.Tuple<float, int>>;
 
-namespace fasttext
+namespace FastText
 {
     public class Model
     {
@@ -25,12 +25,12 @@ namespace fasttext
                 rng = new Random(seed);
             }
 
-            public float getLoss()
+            public float GetLoss()
             {
                 return lossValue_ / nexamples_;
             }
 
-            public void incrementNExamples(float loss)
+            public void IncrementNExamples(float loss)
             {
                 lossValue_ += loss;
                 nexamples_++;
@@ -57,7 +57,7 @@ namespace fasttext
             normalizeGradient_ = normalizeGradient;
         }
 
-        public void predict(
+        public void Predict(
             int[] input,
             int k,
             float threshold,
@@ -66,19 +66,19 @@ namespace fasttext
         {
             if (k == kUnlimitedPredictions)
             {
-                k = (int)wo_.size(0); // output size
+                k = (int)wo_.Size(0); // output size
             }
             else if (k <= 0)
             {
                 throw new ArgumentException("k needs to be 1 or higher!");
             }
             heap = new Predictions(k + 1);
-            computeHidden(input, state);
+            ComputeHidden(input, state);
 
-            loss_.predict(k, threshold, heap, state);
+            loss_.Predict(k, threshold, heap, state);
         }
 
-        public void update(
+        public void Update(
             int[] input,
             int[] targets,
             int targetIndex,
@@ -89,13 +89,13 @@ namespace fasttext
             {
                 return;
             }
-            computeHidden(input, state);
+            ComputeHidden(input, state);
 
             var grad = state.grad;
-            grad.zero();
+            grad.Zero();
 
-            var lossValue = loss_.forward(targets, targetIndex, state, lr, true);
-            state.incrementNExamples(lossValue);
+            var lossValue = loss_.Forward(targets, targetIndex, state, lr, true);
+            state.IncrementNExamples(lossValue);
 
             if (normalizeGradient_)
             {
@@ -103,23 +103,23 @@ namespace fasttext
             }
             for (int i = 0; i < input.Length; i++)
             {
-                wi_.addVectorToRow(grad.data, i, 1f);
+                wi_.AddVectorToRow(grad.Data, i, 1f);
             }
         }
 
-        public void computeHidden(int[] input, State state)
+        public void ComputeHidden(int[] input, State state)
         {
             var hidden = state.hidden;
-            hidden.zero();
+            hidden.Zero();
 
             for (int i = 0; i < input.Length; i++)
             {
-                hidden.addRow(wi_, input[i]);
+                hidden.AddRow(wi_, input[i]);
             }
             hidden.mul(1f / input.Length);
         }
 
-        public float std_log(float x)
+        public float StdLog(float x)
         {
             return (float)Math.Log(x + 1E-5f);
         }

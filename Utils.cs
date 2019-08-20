@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace fasttext
+﻿namespace FastText
 {
     public static class Utils
     {
-        public static bool contains<T>(T[] container, T value)
+        public static bool Contains<T>(T[] container, T value)
         {
             for (int i = 0; i < container.Length; i++)
             {

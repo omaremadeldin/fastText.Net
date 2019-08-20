@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace fasttext
+namespace FastText
 {
     public class Vector
     {
         protected float[] data_;
 
-        public float[] data => data_;
+        public float[] Data => data_;
 
         public float this[long key]
         {
@@ -26,20 +26,20 @@ namespace fasttext
             data_ = new float[m];
         }
 
-        public long size()
+        public long Size()
         {
             return data_.Length;
         }
 
-        public void zero()
+        public void Zero()
         {
             Array.Clear(data_, 0, data_.Length);
         }
 
-        public float norm()
+        public float Norm()
         {
             var sum = 0f;
-            for (long i = 0; i < size(); i++)
+            for (long i = 0; i < Size(); i++)
             {
                 sum += data_[i] * data_[i];
             }
@@ -48,66 +48,66 @@ namespace fasttext
 
         public void mul(float a)
         {
-            for (long i = 0; i < size(); i++)
+            for (long i = 0; i < Size(); i++)
             {
                 data_[i] *= a;
             }
         }
 
-        public void addVector(Vector source)
+        public void AddVector(Vector source)
         {
-            Debug.Assert(size() == source.size());
+            Debug.Assert(Size() == source.Size());
 
-            for (long i = 0; i < size(); i++)
+            for (long i = 0; i < Size(); i++)
             {
                 data_[i] += source.data_[i];
             }
         }
 
-        public void addVector(Vector source, float s)
+        public void AddVector(Vector source, float s)
         {
-            Debug.Assert(size() == source.size());
+            Debug.Assert(Size() == source.Size());
 
-            for (long i = 0; i < size(); i++)
+            for (long i = 0; i < Size(); i++)
             {
                 data_[i] += s * source.data_[i];
             }
         }
 
-        public void addRow(Matrix A, long i, float a)
+        public void AddRow(Matrix A, long i, float a)
         {
             Debug.Assert(i >= 0);
-            Debug.Assert(i < A.size(0));
-            Debug.Assert(size() == A.size(1));
+            Debug.Assert(i < A.Size(0));
+            Debug.Assert(Size() == A.Size(1));
 
-            A.addRowToVector(data_, (int)i, a);
+            A.AddRowToVector(data_, (int)i, a);
         }
 
-        public void addRow(Matrix A, long i)
+        public void AddRow(Matrix A, long i)
         {
             Debug.Assert(i >= 0);
-            Debug.Assert(i < A.size(0));
-            Debug.Assert(size() == A.size(1));
+            Debug.Assert(i < A.Size(0));
+            Debug.Assert(Size() == A.Size(1));
 
-            A.addRowToVector(data_, (int)i);
+            A.AddRowToVector(data_, (int)i);
         }
 
-        public void mul(Matrix A, Vector vec)
+        public void Mul(Matrix A, Vector vec)
         {
-            Debug.Assert(A.size(0) == size());
-            Debug.Assert(A.size(1) == vec.size());
+            Debug.Assert(A.Size(0) == Size());
+            Debug.Assert(A.Size(1) == vec.Size());
 
-            for (long i = 0; i < size(); i++)
+            for (long i = 0; i < Size(); i++)
             {
-                data_[i] = A.dotRow(vec.data_, i);
+                data_[i] = A.DotRow(vec.data_, i);
             }
         }
 
-        public long argmax()
+        public long ArgMax()
         {
             var max = data_[0];
             long argmax = 0;
-            for (long i = 1; i < size(); i++)
+            for (long i = 1; i < Size(); i++)
             {
                 if (data_[i] > max)
                 {

@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace fasttext
+namespace FastText
 {
     public class QuantMatrix : Matrix
     {
@@ -22,10 +22,10 @@ namespace fasttext
         }
 
         public QuantMatrix(DenseMatrix mat, int dsub, bool qnorm)
-            : base(mat.size(0), mat.size(1))
+            : base(mat.Size(0), mat.Size(1))
         {
             qnorm_ = qnorm;
-            codesize_ = (int)(mat.size(0) * ((mat.size(1) + dsub - 1) / dsub));
+            codesize_ = (int)(mat.Size(0) * ((mat.Size(1) + dsub - 1) / dsub));
             codes_ = new byte[codesize_];
             pq_ = new ProductQuantizer((int)n_, dsub);
 
@@ -35,34 +35,34 @@ namespace fasttext
                 npq_ = new ProductQuantizer(1, 1);
             }
 
-            quantize(mat);
+            Quantize(mat);
         }
 
-        public void quantizeNorm(float[] norms)
+        public void QuantizeNorm(float[] norms)
         {
             Debug.Assert(qnorm_);
             Debug.Assert(norms.Length == m_);
 
-            npq_.train((int)m_, norms);
-            npq_.compute_codes(norms, norm_codes_, (int)m_);
+            npq_.Train((int)m_, norms);
+            npq_.ComputeCodes(norms, norm_codes_, (int)m_);
         }
 
-        public void quantize(DenseMatrix mat)
+        public void Quantize(DenseMatrix mat)
         {
             if (qnorm_)
             {
-                var norms = new float[mat.size(0)];
-                mat.l2NormRow(norms);
-                mat.divideRow(norms);
-                quantizeNorm(norms);
+                var norms = new float[mat.Size(0)];
+                mat.L2NormRow(norms);
+                mat.DivideRow(norms);
+                QuantizeNorm(norms);
             }
 
             var data = mat.data;
-            pq_.train((int)m_, data);
-            pq_.compute_codes(data, codes_, (int)m_);
+            pq_.Train((int)m_, data);
+            pq_.ComputeCodes(data, codes_, (int)m_);
         }
 
-        public override float dotRow(float[] vec, long i)
+        public override float DotRow(float[] vec, long i)
         {
             Debug.Assert(i >= 0);
             Debug.Assert(i < m_);
@@ -71,38 +71,38 @@ namespace fasttext
             float norm = 1;
             if (qnorm_)
             {
-                norm = npq_.get_centroids(0, norm_codes_[i])[0];
+                norm = npq_.GetCentroids(0, norm_codes_[i])[0];
             }
 
-            return pq_.mulcode(vec, codes_, (int)i, norm);
+            return pq_.MulCode(vec, codes_, (int)i, norm);
         }
 
-        public override void addVectorToRow(float[] vec, long i, float a)
+        public override void AddVectorToRow(float[] vec, long i, float a)
         {
             throw new InvalidOperationException("Operation not permitted on quantized matrices.");
         }
 
-        public override void addRowToVector(float[] x, int i, float a)
+        public override void AddRowToVector(float[] x, int i, float a)
         {
             var norm = 1f;
             if (qnorm_)
             {
-                norm = npq_.get_centroids(0, norm_codes_[i])[0];
+                norm = npq_.GetCentroids(0, norm_codes_[i])[0];
             }
-            pq_.addcode(x, codes_, i, a * norm);
+            pq_.AddCode(x, codes_, i, a * norm);
         }
 
-        public override void addRowToVector(float[] x, int i)
+        public override void AddRowToVector(float[] x, int i)
         {
             var norm = 1f;
             if (qnorm_)
             {
-                norm = npq_.get_centroids(0, norm_codes_[i])[0];
+                norm = npq_.GetCentroids(0, norm_codes_[i])[0];
             }
-            pq_.addcode(x, codes_, i, norm);
+            pq_.AddCode(x, codes_, i, norm);
         }
 
-        public override void save(BinaryWriter writer)
+        public override void Save(BinaryWriter writer)
         {
             writer.Write(qnorm_);
             writer.Write(m_);
@@ -114,7 +114,7 @@ namespace fasttext
                 writer.Write(codes_[i]);
             }
 
-            pq_.save(writer);
+            pq_.Save(writer);
 
             if (qnorm_)
             {
@@ -123,11 +123,11 @@ namespace fasttext
                     writer.Write(norm_codes_[i]);
                 }
 
-                npq_.save(writer);
+                npq_.Save(writer);
             }
         }
 
-        public override void load(BinaryReader reader)
+        public override void Load(BinaryReader reader)
         {
             qnorm_ = reader.ReadBoolean();
             m_ = reader.ReadInt64();
@@ -141,7 +141,7 @@ namespace fasttext
             }
 
             pq_ = new ProductQuantizer();
-            pq_.load(reader);
+            pq_.Load(reader);
 
             if (qnorm_)
             {
@@ -153,11 +153,11 @@ namespace fasttext
                 }
 
                 npq_ = new ProductQuantizer();
-                npq_.load(reader);
+                npq_.Load(reader);
             }
         }
 
-        public override void dump(TextWriter writer)
+        public override void Dump(TextWriter writer)
         {
             throw new InvalidOperationException("Operation not permitted on quantized matrices.");
         }

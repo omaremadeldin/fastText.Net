@@ -5,7 +5,7 @@ using System.Linq;
 using Wintellect.PowerCollections;
 using Predictions = System.Collections.Generic.List<System.Tuple<float, int>>;
 
-namespace fasttext
+namespace FastText
 {
     public abstract class Loss
     {
@@ -17,7 +17,7 @@ namespace fasttext
         protected List<float> t_log_;
         protected Matrix wo_;
 
-        protected float log(float x)
+        protected float Log(float x)
         {
             if (x > 1.0)
             {
@@ -28,7 +28,7 @@ namespace fasttext
             return t_log_[i];
         }
 
-        protected float sigmoid(float x)
+        protected float Sigmoid(float x)
         {
             if (x < -MAX_SIGMOID)
             {
@@ -46,12 +46,12 @@ namespace fasttext
             }
         }
 
-        protected float std_log(float x)
+        protected float StdLog(float x)
         {
             return (float)Math.Log(x + 1E-5);
         }
 
-        private void findKBest(
+        private void FindKBest(
             int k,
             float threshold,
             Predictions predictions,
@@ -72,12 +72,12 @@ namespace fasttext
                     continue;
                 }
 
-                if (heap.Count == k && std_log(output[i]) < heap.First().Item1)
+                if (heap.Count == k && StdLog(output[i]) < heap.First().Item1)
                 {
                     continue;
                 }
 
-                heap.Add(Tuple.Create(std_log(output[i]), i));
+                heap.Add(Tuple.Create(StdLog(output[i]), i));
 
                 if (heap.Count > k)
                 {
@@ -104,24 +104,24 @@ namespace fasttext
             }
         }
 
-        public virtual void predict(
+        public virtual void Predict(
             int k,
             float threshold,
             Predictions heap,
             Model.State state)
         {
-            computeOutput(state);
-            findKBest(k, threshold, heap, state.output.data);
+            ComputeOutput(state);
+            FindKBest(k, threshold, heap, state.output.Data);
         }
 
-        public abstract float forward(
+        public abstract float Forward(
             int[] targets,
             int targetIndex,
             Model.State state,
             float lr,
             bool backprop);
 
-        public abstract void computeOutput(Model.State state);
+        public abstract void ComputeOutput(Model.State state);
     }
 
     public abstract class BinaryLogisticLoss : Loss
@@ -130,41 +130,41 @@ namespace fasttext
         {
         }
 
-        public float binaryLogistic(
+        public float BinaryLogistic(
             int target,
             Model.State state,
             bool labelIsPositive,
             float lr,
             bool backprop)
         {
-            var score = sigmoid(wo_.dotRow(state.hidden.data, target));
+            var score = Sigmoid(wo_.DotRow(state.hidden.Data, target));
 
             if (backprop)
             {
                 var flabelIsPositive = (float)Convert.ToDouble(labelIsPositive);
                 var alpha = lr * (flabelIsPositive - score);
-                state.grad.addRow(wo_, target, alpha);
-                wo_.addVectorToRow(state.hidden.data, target, alpha);
+                state.grad.AddRow(wo_, target, alpha);
+                wo_.AddVectorToRow(state.hidden.Data, target, alpha);
             }
 
             if (labelIsPositive)
             {
-                return -log(score);
+                return -Log(score);
             }
             else
             {
-                return -log(1f - score);
+                return -Log(1f - score);
             }
         }
 
-        public override void computeOutput(Model.State state)
+        public override void ComputeOutput(Model.State state)
         {
             Vector output = state.output;
-            output.mul(wo_, state.hidden);
-            var osz = output.size();
+            output.Mul(wo_, state.hidden);
+            var osz = output.Size();
             for (int i = 0; i < osz; i++)
             {
-                output[i] = sigmoid(output[i]);
+                output[i] = Sigmoid(output[i]);
             }
         }
     }
@@ -175,7 +175,7 @@ namespace fasttext
         {
         }
 
-        public override float forward(
+        public override float Forward(
             int[] targets,
             int targetIndex,
             Model.State state,
@@ -183,12 +183,12 @@ namespace fasttext
             bool backprop)
         {
             var loss = 0f;
-            var osz = state.output.size();
+            var osz = state.output.Size();
 
             for (int i = 0; i < osz; i++)
             {
-                bool isMatch = Utils.contains(targets, i);
-                loss += binaryLogistic(i, state, isMatch, lr, backprop);
+                bool isMatch = Utils.Contains(targets, i);
+                loss += BinaryLogistic(i, state, isMatch, lr, backprop);
             }
 
             return loss;
@@ -238,7 +238,7 @@ namespace fasttext
             }
         }
 
-        public override float forward(
+        public override float Forward(
             int[] targets,
             int targetIndex,
             Model.State state,
@@ -249,12 +249,12 @@ namespace fasttext
             Debug.Assert(targetIndex < targets.Length);
 
             var target = targets[targetIndex];
-            var loss = binaryLogistic(target, state, true, lr, backprop);
+            var loss = BinaryLogistic(target, state, true, lr, backprop);
 
             for (int n = 0; n < neg_; n++)
             {
                 var negativeTarget = getNegative(target, state.rng);
-                loss += binaryLogistic(negativeTarget, state, false, lr, backprop);
+                loss += BinaryLogistic(negativeTarget, state, false, lr, backprop);
             }
             return loss;
         }
@@ -276,7 +276,7 @@ namespace fasttext
         protected List<Node> tree_;
         protected int osz_;
 
-        protected void buildTree(long[] counts)
+        protected void BuildTree(long[] counts)
         {
             tree_.Capacity = 2 * osz_ - 1;
 
@@ -337,7 +337,7 @@ namespace fasttext
             }
         }
 
-        protected void dfs(
+        protected void DFS(
             int k,
             float threshold,
             int node,
@@ -353,7 +353,7 @@ namespace fasttext
                     return b ? 1 : 0;
                 }));
 
-            if (score < std_log(threshold))
+            if (score < StdLog(threshold))
             {
                 return;
             }
@@ -375,13 +375,13 @@ namespace fasttext
                 return;
             }
 
-            var f = wo_.dotRow(hidden, node - osz_);
+            var f = wo_.DotRow(hidden, node - osz_);
             f = 1f / (1 + (float)Math.Exp(-f));
 
             predictions = heap.ToList();
 
-            dfs(k, threshold, tree_[node].left, score + std_log(1f - f), predictions, hidden);
-            dfs(k, threshold, tree_[node].right, score + std_log(f), predictions, hidden);
+            DFS(k, threshold, tree_[node].left, score + StdLog(1f - f), predictions, hidden);
+            DFS(k, threshold, tree_[node].right, score + StdLog(f), predictions, hidden);
         }
 
         public HierarchicalSoftmaxLoss(Matrix wo, long[] targetCounts) : base(wo)
@@ -391,10 +391,10 @@ namespace fasttext
             tree_ = new List<Node>();
             osz_ = targetCounts.Length;
 
-            buildTree(targetCounts);
+            BuildTree(targetCounts);
         }
 
-        public override float forward(
+        public override float Forward(
             int[] targets,
             int targetIndex,
             Model.State state,
@@ -409,18 +409,18 @@ namespace fasttext
 
             for (int i = 0; i < pathToRoot.Length; i++)
             {
-                loss += binaryLogistic(pathToRoot[i], state, binaryCode[i], lr, backprop);
+                loss += BinaryLogistic(pathToRoot[i], state, binaryCode[i], lr, backprop);
             }
             return loss;
         }
 
-        public override void predict(
+        public override void Predict(
             int k,
             float threshold,
             Predictions heap,
             Model.State state)
         {
-            dfs(k, threshold, 2 * osz_ - 2, 0f, heap, state.hidden.data);
+            DFS(k, threshold, 2 * osz_ - 2, 0f, heap, state.hidden.Data);
         }
     }
 
@@ -430,14 +430,14 @@ namespace fasttext
         {
         }
 
-        public override void computeOutput(Model.State state)
+        public override void ComputeOutput(Model.State state)
         {
             Vector output = state.output;
-            output.mul(wo_, state.hidden);
+            output.Mul(wo_, state.hidden);
 
             var max = output[0];
             var z = 0f;
-            var osz = output.size();
+            var osz = output.Size();
 
             for (int i = 0; i < osz; i++)
             {
@@ -456,7 +456,7 @@ namespace fasttext
             }
         }
 
-        public override float forward(
+        public override float Forward(
             int[] targets,
             int targetIndex,
             Model.State state,
@@ -466,21 +466,21 @@ namespace fasttext
             Debug.Assert(targetIndex >= 0);
             Debug.Assert(targetIndex < targets.Length);
 
-            computeOutput(state);
+            ComputeOutput(state);
             var target = targets[targetIndex];
 
             if (backprop)
             {
-                var osz = wo_.size(0);
+                var osz = wo_.Size(0);
                 for (int i = 0; i < osz; i++)
                 {
                     var label = (i == target) ? 1f : 0f;
                     var alpha = lr * (label - state.output[i]);
-                    state.grad.addRow(wo_, i, alpha);
-                    wo_.addVectorToRow(state.hidden.data, i, alpha);
+                    state.grad.AddRow(wo_, i, alpha);
+                    wo_.AddVectorToRow(state.hidden.Data, i, alpha);
                 }
             }
-            return -log(state.output[target]);
+            return -Log(state.output[target]);
         }
     }
 }

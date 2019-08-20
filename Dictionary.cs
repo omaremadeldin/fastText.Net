@@ -4,17 +4,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace fasttext
+namespace FastText
 {
     public class Dictionary
     {
-        public enum entry_type : byte { word = 0, label = 1 };
+        public enum EntryType : byte { word = 0, label = 1 };
 
-        public class entry
+        public class Entry
         {
             public string word;
             public long count;
-            public entry_type type;
+            public EntryType type;
             public List<int> subwords;
         };
 
@@ -23,7 +23,7 @@ namespace fasttext
 
         protected Args args_;
         protected int[] word2int_;
-        protected List<entry> words_;
+        protected List<Entry> words_;
 
         protected float[] pdiscard_;
         protected int size_;
@@ -55,22 +55,22 @@ namespace fasttext
             ntokens_ = 0;
             pruneidx_size_ = -1;
 
-            words_ = new List<entry>();
+            words_ = new List<Entry>();
             pruneidx_ = new Dictionary<int, int>();
         }
 
         public Dictionary(Args args, BinaryReader reader)
             : this(args)
         {
-            load(reader);
+            Load(reader);
         }
 
-        protected int find(string w)
+        protected int Find(string w)
         {
-            return find(w, hash(w));
+            return Find(w, Hash(w));
         }
 
-        protected int find(string w, uint h)
+        protected int Find(string w, uint h)
         {
             var word2intsize = word2int_.Length;
             var id = h % word2intsize;
@@ -83,16 +83,16 @@ namespace fasttext
             return (int)id;
         }
 
-        public void add(string w)
+        public void Add(string w)
         {
-            var h = find(w);
+            var h = Find(w);
             ntokens_++;
             if (word2int_[h] == -1)
             {
-                var e = new entry();
+                var e = new Entry();
                 e.word = w;
                 e.count = 1;
-                e.type = getType(w);
+                e.type = GetType(w);
                 words_.Add(e);
                 word2int_[h] = size_++;
             }
@@ -105,7 +105,7 @@ namespace fasttext
             }
         }
 
-        public int[] getSubwords(int i)
+        public int[] GetSubwords(int i)
         {
             Debug.Assert(i >= 0);
             Debug.Assert(i < nwords_);
@@ -113,25 +113,25 @@ namespace fasttext
             return words_[i].subwords.ToArray();
         }
 
-        public int[] getSubwords(string word)
+        public int[] GetSubwords(string word)
         {
-            var i = getId(word);
+            var i = GetId(word);
             if (i >= 0)
             {
-                return getSubwords(i);
+                return GetSubwords(i);
             }
 
             var ngrams = new List<int>();
             if (word != EOS)
             {
-                computeSubwords(BOW + word + EOW, ngrams, null);
+                ComputeSubwords(BOW + word + EOW, ngrams, null);
             }
             return ngrams.ToArray();
         }
 
-        public void getSubwords(string word, List<int> ngrams, List<string> substrings)
+        public void GetSubwords(string word, List<int> ngrams, List<string> substrings)
         {
-            var i = getId(word);
+            var i = GetId(word);
             ngrams.Clear();
             substrings.Clear();
 
@@ -143,16 +143,16 @@ namespace fasttext
 
             if (word != EOS)
             {
-                computeSubwords(BOW + word + EOW, ngrams, substrings);
+                ComputeSubwords(BOW + word + EOW, ngrams, substrings);
             }
         }
 
-        public bool discard(int id, float rand)
+        public bool Discard(int id, float rand)
         {
             Debug.Assert(id >= 0);
             Debug.Assert(id < nwords_);
 
-            if (args_.model == model_name.sup)
+            if (args_.model == ModelName.sup)
             {
                 return false;
             }
@@ -160,19 +160,19 @@ namespace fasttext
             return rand > pdiscard_[id];
         }
 
-        public int getId(string w, uint h)
+        public int GetId(string w, uint h)
         {
-            var id = find(w, h);
+            var id = Find(w, h);
             return word2int_[id];
         }
 
-        public int getId(string w)
+        public int GetId(string w)
         {
-            var id = find(w);
+            var id = Find(w);
             return word2int_[id];
         }
 
-        public entry_type getType(int id)
+        public EntryType getType(int id)
         {
             Debug.Assert(id >= 0);
             Debug.Assert(id < size_);
@@ -180,12 +180,12 @@ namespace fasttext
             return words_[id].type;
         }
 
-        public entry_type getType(string w)
+        public EntryType GetType(string w)
         {
-            return (w.IndexOf(args_.label) == 0) ? entry_type.label : entry_type.word;
+            return (w.IndexOf(args_.label) == 0) ? EntryType.label : EntryType.word;
         }
 
-        public string getWord(int id)
+        public string GetWord(int id)
         {
             Debug.Assert(id >= 0);
             Debug.Assert(id < size_);
@@ -193,7 +193,7 @@ namespace fasttext
             return words_[id].word;
         }
 
-        public uint hash(string str)
+        public uint Hash(string str)
         {
             uint h = 2166136261;
             for (int i = 0; i < str.Length; i++)
@@ -204,7 +204,7 @@ namespace fasttext
             return h;
         }
 
-        public void computeSubwords(string word, List<int> ngrams, List<string> substrings)
+        public void ComputeSubwords(string word, List<int> ngrams, List<string> substrings)
         {
             for (int i = 0; i < word.Length; i++)
             {
@@ -226,8 +226,8 @@ namespace fasttext
 
                     if (n >= args_.minn && !(n == 1 && (i == 0 || j == word.Length)))
                     {
-                        var h = hash(ngram) % args_.bucket;
-                        pushHash(ngrams, (int)h);
+                        var h = Hash(ngram) % args_.bucket;
+                        PushHash(ngrams, (int)h);
 
                         if (substrings != null)
                         {
@@ -238,7 +238,7 @@ namespace fasttext
             }
         }
 
-        protected void initNgrams()
+        protected void InitNgrams()
         {
             for (int i = 0; i < size_; i++)
             {
@@ -247,12 +247,12 @@ namespace fasttext
 
                 if (words_[i].word != EOS)
                 {
-                    computeSubwords(word, words_[i].subwords, null);
+                    ComputeSubwords(word, words_[i].subwords, null);
                 }
             }
         }
 
-        public bool readWord(Stream stream, out string word)
+        public bool ReadWord(Stream stream, out string word)
         {
             word = string.Empty;
             while (stream.Position != stream.Length)
@@ -285,12 +285,12 @@ namespace fasttext
             return !string.IsNullOrEmpty(word);
         }
 
-        public void readFromFile(Stream stream)
+        public void ReadFromFile(Stream stream)
         {
             var minThreshold = 1L;
-            while (readWord(stream, out var word))
+            while (ReadWord(stream, out var word))
             {
-                add(word);
+                Add(word);
 
                 if (ntokens_ % 1000000 == 0 && args_.verbose > 1)
                 {
@@ -300,12 +300,12 @@ namespace fasttext
                 if (size_ > 0.75 * MAX_VOCAB_SIZE)
                 {
                     minThreshold++;
-                    threshold(minThreshold, minThreshold);
+                    Threshold(minThreshold, minThreshold);
                 }
             }
-            threshold(args_.minCount, args_.minCountLabel);
-            initTableDiscard();
-            initNgrams();
+            Threshold(args_.minCount, args_.minCountLabel);
+            InitTableDiscard();
+            InitNgrams();
             if (args_.verbose > 0)
             {
                 Console.Error.WriteLine($"\rRead {(ntokens_ / 1000000)}M words");
@@ -318,9 +318,9 @@ namespace fasttext
             }
         }
 
-        public void threshold(long t, long tl)
+        public void Threshold(long t, long tl)
         {
-            words_.Sort(new Comparison<entry>((e1, e2) =>
+            words_.Sort(new Comparison<Entry>((e1, e2) =>
             {
                 if (e1.type != e2.type)
                 {
@@ -331,8 +331,8 @@ namespace fasttext
 
             words_ = words_.Where(e =>
             {
-                return (e.type == entry_type.word && e.count >= t) ||
-                (e.type == entry_type.label && e.count >= tl);
+                return (e.type == EntryType.word && e.count >= t) ||
+                (e.type == EntryType.label && e.count >= tl);
             }).ToList();
 
             size_ = 0;
@@ -344,21 +344,21 @@ namespace fasttext
             for (int i = 0; i < words_.Count; i++)
             {
                 var e = words_[i];
-                var h = find(e.word);
+                var h = Find(e.word);
                 word2int_[h] = size_++;
 
-                if (e.type == entry_type.word)
+                if (e.type == EntryType.word)
                 {
                     nwords_++;
                 }
-                else if (e.type == entry_type.label)
+                else if (e.type == EntryType.label)
                 {
                     nlabels_++;
                 }
             }
         }
 
-        protected void initTableDiscard()
+        protected void InitTableDiscard()
         {
             pdiscard_ = new float[size_];
 
@@ -369,7 +369,7 @@ namespace fasttext
             }
         }
 
-        public List<long> getCounts(entry_type type)
+        public List<long> GetCounts(EntryType type)
         {
             var counts = new List<long>();
             for (int i = 0; i < size_; i++)
@@ -383,7 +383,7 @@ namespace fasttext
             return counts;
         }
 
-        protected void addWordNgrams(List<int> line, int[] hashes, int n)
+        protected void AddWordNgrams(List<int> line, int[] hashes, int n)
         {
             for (int i = 0; i < hashes.Length; i++)
             {
@@ -391,19 +391,19 @@ namespace fasttext
                 for (int j = i + 1; j < hashes.Length && j < i + n; j++)
                 {
                     h = h * 116049371 + hashes[j];
-                    pushHash(line, (int)(h % args_.bucket));
+                    PushHash(line, (int)(h % args_.bucket));
                 }
             }
         }
 
-        protected void addSubwords(List<int> line, string token, int wid)
+        protected void AddSubwords(List<int> line, string token, int wid)
         {
             if (wid < 0)
             { 
                 // out of vocab
                 if (token != EOS)
                 {
-                    computeSubwords(BOW + token + EOW, line, null);
+                    ComputeSubwords(BOW + token + EOW, line, null);
                 }
             }
             else
@@ -416,13 +416,13 @@ namespace fasttext
                 else
                 { 
                     // in vocab w/ subwords
-                    var ngrams = getSubwords(wid);
+                    var ngrams = GetSubwords(wid);
                     line.AddRange(ngrams);
                 }
             }
         }
 
-        protected void reset(Stream stream)
+        protected void Reset(Stream stream)
         {
             if (stream.Position == stream.Length)
             {
@@ -431,16 +431,16 @@ namespace fasttext
             }
         }
 
-        public int getLine(Stream stream, List<int> words, Random rng)
+        public int GetLine(Stream stream, List<int> words, Random rng)
         {
             var ntokens = 0;
 
-            reset(stream);
+            Reset(stream);
             words.Clear();
 
-            while (readWord(stream, out string token))
+            while (ReadWord(stream, out string token))
             {
-                var h = find(token);
+                var h = Find(token);
                 var wid = word2int_[h];
 
                 if (wid < 0)
@@ -450,7 +450,7 @@ namespace fasttext
 
                 ntokens++;
 
-                if (getType(wid) == entry_type.word && !discard(wid, (float)rng.NextDouble()))
+                if (getType(wid) == EntryType.word && !Discard(wid, (float)rng.NextDouble()))
                 {
                     words.Add(wid);
                 }
@@ -463,28 +463,28 @@ namespace fasttext
             return ntokens;
         }
 
-        public int getLine(Stream stream, List<int> words, List<int> labels)
+        public int GetLine(Stream stream, List<int> words, List<int> labels)
         {
             var word_hashes = new List<int>();
             var ntokens = 0;
 
-            reset(stream);
+            Reset(stream);
             words.Clear();
             labels.Clear();
 
-            while (readWord(stream, out var token))
+            while (ReadWord(stream, out var token))
             {
-                var h = hash(token);
-                var wid = getId(token, h);
-                var type = wid < 0 ? getType(token) : getType(wid);
+                var h = Hash(token);
+                var wid = GetId(token, h);
+                var type = wid < 0 ? GetType(token) : getType(wid);
 
                 ntokens++;
-                if (type == entry_type.word)
+                if (type == EntryType.word)
                 {
-                    addSubwords(words, token, wid);
+                    AddSubwords(words, token, wid);
                     word_hashes.Add((int)h);
                 }
-                else if (type == entry_type.label && wid >= 0)
+                else if (type == EntryType.label && wid >= 0)
                 {
                     labels.Add(wid - nwords_);
                 }
@@ -493,11 +493,11 @@ namespace fasttext
                     break;
                 }
             }
-            addWordNgrams(words, word_hashes.ToArray(), args_.wordNgrams);
+            AddWordNgrams(words, word_hashes.ToArray(), args_.wordNgrams);
             return ntokens;
         }
 
-        protected void pushHash(List<int> hashes, int id)
+        protected void PushHash(List<int> hashes, int id)
         {
             if (pruneidx_size_ == 0 || id < 0)
             {
@@ -519,7 +519,7 @@ namespace fasttext
             hashes.Add(nwords_ + id);
         }
 
-        public string getLabel(int lid)
+        public string GetLabel(int lid)
         {
             if (lid < 0 || lid >= nlabels_)
             {
@@ -529,7 +529,7 @@ namespace fasttext
             return words_[lid + nwords_].word;
         }
 
-        public void save(BinaryWriter writer)
+        public void Save(BinaryWriter writer)
         {
             writer.Write(size_);
             writer.Write(nwords_);
@@ -539,7 +539,7 @@ namespace fasttext
 
             for (int i = 0; i < size_; i++)
             {
-                entry e = words_[i];
+                Entry e = words_[i];
                 var word_bytes = System.Text.Encoding.ASCII.GetBytes(e.word);
                 writer.Write(word_bytes);
                 writer.Write((byte)0);
@@ -554,7 +554,7 @@ namespace fasttext
             }
         }
 
-        public void load(BinaryReader reader)
+        public void Load(BinaryReader reader)
         {
             words_.Clear();
             size_ = reader.ReadInt32();
@@ -565,7 +565,7 @@ namespace fasttext
 
             for (int i = 0; i < size_; i++)
             {
-                var e = new entry();
+                var e = new Entry();
                 var c = (char)reader.ReadByte();
                 while (c != '\0')
                 {
@@ -573,7 +573,7 @@ namespace fasttext
                     c = (char)reader.ReadByte();
                 }
                 e.count = reader.ReadInt64();
-                e.type = (entry_type)reader.ReadByte();
+                e.type = (EntryType)reader.ReadByte();
                 words_.Add(e);
             }
 
@@ -586,19 +586,19 @@ namespace fasttext
                 pruneidx_[key] = value;
             }
 
-            initTableDiscard();
-            initNgrams();
+            InitTableDiscard();
+            InitNgrams();
 
             var word2intsize = (int)Math.Ceiling(size_ / 0.7);
             word2int_ = Enumerable.Repeat(-1, word2intsize).ToArray();
 
             for (int i = 0; i < size_; i++)
             {
-                word2int_[find(words_[i].word)] = i;
+                word2int_[Find(words_[i].word)] = i;
             }
         }
 
-        public void dump(TextWriter writer)
+        public void Dump(TextWriter writer)
         {
             writer.WriteLine($"{words_.Count}");
 
@@ -607,7 +607,7 @@ namespace fasttext
                 var e = words_[i];
                 var entryType = "word";
 
-                if (e.type == entry_type.label)
+                if (e.type == EntryType.label)
                 {
                     entryType = "label";
                 }
@@ -616,18 +616,18 @@ namespace fasttext
             }
         }
 
-        public void init()
+        public void Init()
         {
-            initTableDiscard();
-            initNgrams();
+            InitTableDiscard();
+            InitNgrams();
         }
 
-        public bool isPruned()
+        public bool IsPruned()
         {
             return pruneidx_size_ >= 0;
         }
 
-        public void prune(List<int> idx)
+        public void Prune(List<int> idx)
         {
             var words = new List<int>();
             var ngrams = new List<int>();
@@ -665,18 +665,18 @@ namespace fasttext
             int j = 0;
             for (int i = 0; i < words_.Count; i++)
             {
-                if (getType(i) == entry_type.label ||
+                if (getType(i) == EntryType.label ||
                     (j < words.Count && words[j] == i))
                 {
                     words_[j] = words_[i];
-                    word2int_[find(words_[j].word)] = j;
+                    word2int_[Find(words_[j].word)] = j;
                     j++;
                 }
             }
             nwords_ = words.Count;
             size_ = nwords_ + nlabels_;
             words_.RemoveRange(size_, words_.Count - size_ - 1);
-            initNgrams();
+            InitNgrams();
         }
     }
 }

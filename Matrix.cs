@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 
-namespace fasttext
+namespace FastText
 {
     public abstract class Matrix
     {
@@ -18,7 +18,7 @@ namespace fasttext
             n_ = n;
         }
 
-        public long size(long dim)
+        public long Size(long dim)
         {
             Debug.Assert(dim == 0 || dim == 1);
 
@@ -30,18 +30,18 @@ namespace fasttext
             return n_;
         }
 
-        public abstract float dotRow(float[] vec, long i);
+        public abstract float DotRow(float[] vec, long i);
 
-        public abstract void addVectorToRow(float[] vec, long i, float a);
+        public abstract void AddVectorToRow(float[] vec, long i, float a);
 
-        public abstract void addRowToVector(float[] x, int i);
+        public abstract void AddRowToVector(float[] x, int i);
 
-        public abstract void addRowToVector(float[] x, int i, float a);
+        public abstract void AddRowToVector(float[] x, int i, float a);
 
-        public abstract void save(BinaryWriter writer);
+        public abstract void Save(BinaryWriter writer);
 
-        public abstract void load(BinaryReader reader);
+        public abstract void Load(BinaryReader reader);
 
-        public abstract void dump(TextWriter writer);
+        public abstract void Dump(TextWriter writer);
     }
 }
